@@ -1,0 +1,16 @@
+pillow
+oauth2client
+flask
+jinja
+tkinter
+google
+gunicorn
+gspread
+google-auth
+google-auth-oauthlib
+google-api-python-client
+qrcode
+reportlab
+requests
+python-dotenv
+pyinstaller

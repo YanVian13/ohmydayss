@@ -1,0 +1,19 @@
+<!-- templates/reset.html -->
+{% extends "base.html" %}
+{% block title %}Reset Kode{% endblock %}
+
+{% block content %}
+  <h2>Reset Kode</h2>
+  <p class="muted">Hasil operasi reset:</p>
+
+  <div style="margin-top:18px;">
+    <div style="padding:12px;border-radius:8px;background:#ecfdf5;color:#065f46;">
+      {{ message }}
+    </div>
+  </div>
+
+  <div style="margin-top:18px;">
+    <a href="{{ url_for('admin_login') }}" class="btn" style="background:#64748b;">← Kembali ke Admin</a>
+    <a href="{{ url_for('index') }}" class="btn" style="background:#2563eb;">Ke Halaman Utama</a>
+  </div>
+{% endblock %}

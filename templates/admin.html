@@ -1,0 +1,111 @@
+<!-- templates/admin.html -->
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block head %}
+<style>
+  .admin-container { display:flex; flex-direction:column; gap:22px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; }
+  .stat-card { border-radius:12px; padding:16px 18px; color:#fff; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
+  .stat-total { background:#2563eb; }
+  .stat-valid { background:#059669; }
+  .stat-unused { background:#1d4ed8; }
+  .stat-used { background:#ca8a04; }
+  .actions { display:flex; gap:12px; flex-wrap:wrap; }
+  .log-panel { background:#0f172a; color:#e2e8f0; border-radius:10px; padding:12px; font-family:Consolas, monospace; font-size:0.9rem; max-height:300px; overflow-y:auto; white-space:pre-wrap; }
+  .log-line { border-bottom:1px solid rgba(255,255,255,0.05); padding:2px 0; }
+  .login-box { max-width:420px; margin:auto; text-align:center; }
+  .login-box input { width:80%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc; }
+  .login-box button { width:84%; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if login %}
+  <div class="login-box">
+    <h2>🔐 Login Admin</h2>
+    <p class="muted">Masukkan password untuk mengakses panel.</p>
+    {% if error %}
+      <div style="background:#fee2e2;color:#7f1d1d;padding:8px;border-radius:8px;margin-bottom:8px;">{{ error }}</div>
+    {% endif %}
+    <form method="post">
+      <input type="password" name="password" placeholder="Password admin..." required><br>
+      <button type="submit" class="btn">Masuk</button>
+    </form>
+    <p class="muted" style="margin-top:10px;">-</p>
+  </div>
+{% else %}
+  <div class="admin-container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2>⚙️ Panel Admin</h2>
+      <a href="{{ url_for('logout') }}" class="btn" style="background:#64748b;">🚪 Logout</a>
+    </div>
+
+    <section>
+      <h3>📊 Statistik Tiket</h3>
+      <div class="stats-grid">
+        <div class="stat-card stat-total">Total<br><span style="font-size:1.6rem;">{{ stats.total }}</span></div>
+        <div class="stat-card stat-valid">Valid<br><span style="font-size:1.6rem;">{{ stats.valid }}</span></div>
+        <div class="stat-card stat-unused">Belum Digunakan<br><span style="font-size:1.6rem;">{{ stats.unused }}</span></div>
+        <div class="stat-card stat-used">Sudah Digunakan<br><span style="font-size:1.6rem;">{{ stats.used }}</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h3>🔁 Aksi Sistem</h3>
+      <div class="actions">
+        <form action="{{ url_for('reset') }}" method="post" onsubmit="return confirm('Reset kode yang digunakan lebih dari 24 jam?');">
+          <button type="submit" class="btn" style="background:#f59e0b;">🕒 Reset >24 Jam</button>
+        </form>
+        <form action="{{ url_for('reset') }}?mode=all" method="post" onsubmit="return confirm('Yakin reset SEMUA kode?');">
+          <button type="submit" class="btn" style="background:#dc2626;">💣 Reset Semua</button>
+        </form>
+		<form action="{{ url_for('delete_valid') }}" method="post"
+      onsubmit="return confirm('Yakin ingin menghapus semua tiket valid? Tindakan ini tidak dapat dibatalkan.');"
+      style="margin-top:10px;">
+			<button type="submit" class="btn" style="background:#dc2626;">🗑️ Hapus Semua Tiket Valid</button>
+		</form>
+        <a href="{{ url_for('index') }}" class="btn" style="background:#1e40af;">🏠 Halaman Utama</a>
+      </div>
+    </section>
+
+    <section>
+      <h3>🧾 Log Aktivitas Scanner</h3>
+      {% if logs %}
+        <div class="log-panel" id="logPanel">
+          {% for line in logs %}
+            <div class="log-line">{{ line.strip() }}</div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">Belum ada log scanner.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not login %}
+<script>
+  // Auto-scroll log panel ke bawah saat load
+  const panel = document.getElementById('logPanel');
+  if(panel){ panel.scrollTop = panel.scrollHeight; }
+
+  // Auto-refresh log tiap 10 detik (opsional)
+  setInterval(() => {
+    fetch(window.location.href)
+      .then(res => res.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newPanel = doc.getElementById('logPanel');
+        if(newPanel && panel){
+          panel.innerHTML = newPanel.innerHTML;
+          panel.scrollTop = panel.scrollHeight;
+        }
+      });
+  }, 10000);
+</script>
+{% endif %}
+{% endblock %}

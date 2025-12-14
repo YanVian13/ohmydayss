@@ -1,0 +1,92 @@
+<!-- templates/scan_choice.html -->
+{% extends "base.html" %}
+{% block title %}Scan Tiket{% endblock %}
+
+{% block content %}
+  <h2>Scan Tiket</h2>
+  <p class="muted">Arahkan kamera ke QR code peserta. Jika menggunakan OBS Virtual Camera, pilih kamera tersebut.</p>
+
+  <div style="margin-top:12px; text-align:center;">
+    <video id="video" width="480" height="360" autoplay playsinline style="border-radius:8px; border:1px solid #e6edf3;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+  </div>
+
+  <div style="margin-top:12px; text-align:center;">
+    <a href="{{ url_for('index') }}" class="btn" style="background:#64748b;">← Kembali</a>
+  </div>
+
+  <p class="muted" style="margin-top:12px;">Jika scan gagal, kamu dapat memasukkan kode manual di browser: <code>/scan?id=KODE</code></p>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    function extractTokenFromString(s) {
+      try {
+        // jika s adalah URL, coba ambil param id atau token
+        const u = new URL(s);
+        const pId = u.searchParams.get('id');
+        const pT = u.searchParams.get('token');
+        if (pId) return pId;
+        if (pT) return pT;
+        // fallback: jika path terakhir terlihat seperti token
+        const parts = u.pathname.split('/');
+        if (parts.length) {
+          const maybe = parts[parts.length-1];
+          if (maybe && maybe.length >= 6) return maybe;
+        }
+      } catch (e) {
+        // bukan URL, anggap langsung token
+        return s.trim();
+      }
+      return s.trim();
+    }
+
+    function startCamera() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+          video.srcObject = stream;
+          video.setAttribute("playsinline", true);
+          video.play();
+          requestAnimationFrame(tick);
+        })
+        .catch(err => {
+          alert("Gagal mengakses kamera: " + err);
+        });
+    }
+
+    function tick() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imgData.data, imgData.width, imgData.height);
+        if (code && code.data) {
+          // hentikan kamera
+          video.srcObject.getTracks().forEach(t => t.stop());
+          const raw = code.data;
+          const token = extractTokenFromString(raw);
+          // jika QR berisi param id (bit.ly...), arahkan ke /scan?id=...
+          if (raw.includes('id=')) {
+            window.location.href = '/scan?id=' + encodeURIComponent(token);
+          } else if (raw.includes('token=')) {
+            window.location.href = '/verify?token=' + encodeURIComponent(token);
+          } else {
+            // fallback: coba /scan?id=
+            window.location.href = '/scan?id=' + encodeURIComponent(token);
+          }
+          return;
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // start on page load
+    window.addEventListener('load', startCamera);
+  </script>
+{% endblock %}

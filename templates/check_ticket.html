@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width:600px;margin:80px auto;text-align:center">
+
+  <h1 style="font-size:42px;margin-bottom:30px;">🎟️ Validator Tiket</h1>
+
+  <form method="POST">
+    <input 
+      type="text"
+      name="code"
+      placeholder="Masukkan kode tiket"
+      required
+      style="
+        width:100%;
+        padding:16px;
+        font-size:18px;
+        border-radius:30px;
+        border:1px solid #ccc;
+        outline:none;
+        text-align:center;
+      ">
+    <button
+      style="
+        margin-top:20px;
+        padding:10px 30px;
+        border:none;
+        border-radius:20px;
+        font-size:16px;
+        background:#2563eb;
+        color:white;
+        cursor:pointer;
+      ">
+      Cek Tiket
+    </button>
+  </form>
+
+  {% if result %}
+    <div style="margin-top:40px;text-align:left">
+
+      {% if result.valid %}
+        <div style="padding:20px;border-radius:12px;background:#ecfdf5">
+          <h3 style="color:#15803d;">✅ Tiket Valid</h3>
+
+          <p><b>Nama:</b> {{ result.name }}</p>
+          <p><b>Email:</b> {{ result.email }}</p>
+          <p><b>Kode:</b> {{ result.code }}</p>
+          <p><b>Dikirim:</b> {{ result.sent_at }}</p>
+          <p><b>Status:</b>
+            {% if result.used_at %}
+              ❌ Belum digunakan ({{ result.used_at }})
+            {% else %}
+              ✅ Sudah digunakan
+            {% endif %}
+          </p>
+
+          <div style="text-align:center;margin-top:20px">
+            <img src="{{ url_for('static', filename='qr/' ~ result.code ~ '.png') }}"
+                 style="width:220px;border:1px solid #ddd;border-radius:8px">
+          </div>
+        </div>
+      {% else %}
+        <div style="padding:20px;border-radius:12px;background:#fee2e2">
+          <h3 style="color:#b91c1c;">❌ Kode Tidak Ditemukan</h3>
+          <p>Pastikan kode yang Anda masukkan benar.</p>
+        </div>
+      {% endif %}
+
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

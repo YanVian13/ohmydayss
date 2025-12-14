@@ -1,0 +1,34 @@
+<!-- templates/verify_result.html -->
+{% extends "base.html" %}
+{% block title %}Hasil Verifikasi{% endblock %}
+
+{% block content %}
+  <h2 style="text-align:center;">Verifikasi Tiket</h2>
+  <p style="text-align:center;" class="muted">Kode: <strong>{{ code }}</strong></p>
+
+  <div style="margin-top:18px; text-align:center;">
+    {% if status == 'ok' %}
+      <div style="font-size:46px; color:#16a34a;">✅</div>
+      <div style="margin-top:12px; padding:14px; border-radius:8px; background:#ecfdf5; color:#065f46; font-weight:600;">
+        {{ message or "Tiket valid. Selamat datang!" }}
+      </div>
+    {% elif status == 'used' %}
+      <div style="font-size:46px; color:#b45309;">⚠️</div>
+      <div style="margin-top:12px; padding:14px; border-radius:8px; background:#fef3c7; color:#92400e; font-weight:600;">
+        {{ message or "Kode sudah digunakan dalam 24 jam terakhir." }}
+      </div>
+    {% else %}
+      <div style="font-size:46px; color:#dc2626;">❌</div>
+      <div style="margin-top:12px; padding:14px; border-radius:8px; background:#fee2e2; color:#7f1d1d; font-weight:600;">
+        {{ message or "Kode tidak valid atau tidak ditemukan." }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div style="margin-top:18px; text-align:center;">
+    <a class="btn" href="{{ url_for('scan_choice') }}" style="background:#0ea5e9;">🔄 Scan Tiket Lain</a>
+    <a class="btn" href="{{ url_for('index') }}" style="background:#64748b;">🏠 Beranda</a>
+  </div>
+
+  <p style="text-align:center; margin-top:14px;" class="muted">{{ time }}</p>
+{% endblock %}
